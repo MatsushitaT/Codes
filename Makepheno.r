@@ -1,5 +1,5 @@
-st=ls())
-setwd("~/Documents/Cortex")
+rm(list=ls())
+setwd("~/Analysis/Gene_Cortex")
 
 ##### READ DATA
 ## read table
@@ -57,27 +57,25 @@ rm(left,right)
 
 cortical.thickness[cortical.thickness==0] <- NA
 cort3sd <- cortical.thickness
-exclude <- apply(cortical.thickness,2,function(x){x>mean(x,na.rm=T)+3*sd(x,na.rm=T)|x<mean(x,na.rm=T)-3*sd(x,na.rm=T)})
-for(i in 1:ncol(cort3sd)){cort3sd[,i] <- ifelse(exclude[,i],NA,cort3sd[,i])} 
+cort3sd <- apply(cort3sd,2,function(x){
+	m <- mean(x,na.rm=T)
+	sd <- sd(x,na.rm=T)
+	pmin(pmax(x,m-3*sd),m+3*sd)})
 
 ## missing rate in each individual
-(ind <- apply(cortical.thickness, 1, function(x)length(which(is.na(x)))/length(x)))
-(ind2 <- apply(cort3sd, 1, function(x)length(which(is.na(x)))/length(x)))
+(ind <- apply(cortical.thickness, 1, function(x)sum(is.na(x))/length(x)))
+(ind2 <- apply(cort3sd, 1, function(x)sum(is.na(x))/length(x)))
 
 ## missing rate in each cortex
-(cereb <- apply(cortical.thickness, 2, function(x)length(which(is.na(x)))/length(x)))
-(cereb2 <- apply(cort3sd, 2, function(x)length(which(is.na(x)))/length(x)))
+(cereb <- apply(cortical.thickness, 2, function(x)sum(is.na(x))/length(x)))
+(cereb2 <- apply(cort3sd, 2, function(x)sum(is.na(x))/length(x)))
 cortical.thickness <- cortical.thickness[ind<0.05,cereb<0.05]
 cort3sd <- cort3sd[ind2<0.05,cereb2<0.05]
 
 ## make FID and IID
-cortical.thickness <- cbind(cortical.thickness,rownames(cortical.thickness))
-cortical.thickness <- cortical.thickness[,c(69,69,1:68)]
-colnames(cortical.thickness)[1:2] <- c("FID","IID") 
+cortical.thickness <- cbind(FID = rownames(cortical.thickness),IID = rownames(cortical.thickness),cortical.thickness)
 
-cort3sd <- cbind(cort3sd,rownames(cort3sd))
-cort3sd <- cort3sd[,c(69,69,1:68)]
-colnames(cort3sd)[1:2] <- c("FID","IID")
+cort3sd <- cbind(FID = rownames(cort3sd),IID = rownames(cort3sd),cort3sd)
 
 ## phenotype file for PLINK
 write.table(cortical.thickness, "phenotype.txt",col.names=T, row.names=F, quote=F)

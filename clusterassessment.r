@@ -1,6 +1,8 @@
 rm(list=ls())
 setwd("~/Analysis/Gene_Cortex")
 
+library("rrcov")
+
 ##### READ DATA
 ## read table
 left <- read.table("cortical-thickness-left-hemi.txt",
@@ -56,6 +58,7 @@ colnames(cortical.thickness) <- gsub("_thickness","",colnames(cortical.thickness
 rm(left,right)
 
 cortical.thickness[cortical.thickness==0] <- NA
+
 cort3sd <- cortical.thickness
 cort3sd <- apply(cort3sd,2,function(x){
   m <- mean(x,na.rm=T)
@@ -73,28 +76,36 @@ cortical.thickness <- cortical.thickness[ind<0.05,cereb<0.05]
 cort3sd <- cort3sd[ind2<0.05,cereb2<0.05]
 
 tmp <- cortical.thickness[, c(rbind(1:34, 1:34+34))]
+##make distance matrix by correlation
 cormat <- as.dist(1-cor(tmp,use='pair'))
+##make distance matrix by Euclidean method
 eucmat <- dist(t(cortical.thickness))
+##make distance matrix by Manhattan method
 manmat <- dist(t(cortical.thickness), method="manhattan")
 
 methods <- c("ward", "single", "complete", "average", "mcquitty", "median", "centroid")
 
+## plot dendrogram by each method using distance information based on the correlation coefficient
 pdf("clustering_by_cor.pdf")
   par(ps=8)
   for(m in methods)plot(hclust(cormat,method=m),main=paste(m,"Cor", sep=":"))
 dev.off()
 
+## plot dendrogram by each method using distance information by Euclidean method
 pdf("clustering_by_Euc.pdf")
 par(ps=8)
 for(m in methods)plot(hclust(eucmat,method=m),main=paste(m,"Euclidean", sep=":"))
 dev.off()
 
+## plot dendrogram by each method using distance information by Manhattan method
 pdf("clustering_by_Manhattan.pdf")
 par(ps=8)
 for(m in methods)plot(hclust(manmat, method=m),main=paste(m,"Manhattan", sep=":"))
 dev.off()
-table(Cor.group)
 
+## Brain regions included in each cluster (3-9) by Ward method
+## based on the information of the correlation coefficient, and
+## frequency of samples showing p<0.05 diffrence between each cluster
 for(i in 3:9){
   Cor.group <- cutree(hclust(cormat, method="ward"),i)
   oneway <- lapply(as.data.frame(t(cortical.thickness)),function(x)oneway.test(x~Cor.group))
@@ -107,9 +118,12 @@ for(i in 3:9){
   sink()}
   cat("\n","p<0.05: ", nump, "in", nrow(cortical.thickness), "\n\n", append=T, file="Grouped_by_cor.txt")}
 
+## Brain regions included in each cluster (3-9) by Ward method
+## based on the Euclidean distance, and
+## frequency of samples showing p<0.05 diffrence between each cluster
 for(i in 3:9){
   Euc.group <- cutree(hclust(eucmat, method="ward"),i)
-  oneway <- lapply(as.data.frame(t(cortical.thickness)),function(x)oneway.test(x~Cor.group))
+  oneway <- lapply(as.data.frame(t(cortical.thickness)),function(x)oneway.test(x~Euc.group))
   nump <- sum(sapply(oneway, function(x)x$p.value<0.05))
   cat("\n","Divided by ", i, "groups","\n\n",append=T,file="Grouped_by_Euc.txt")
   for(numg in 1:i){
@@ -118,3 +132,17 @@ for(i in 3:9){
     print(names(Euc.group[Euc.group==numg]),quote=F)
     sink()}
   cat("\n","p<0.05: ", nump, "in", nrow(cortical.thickness), "\n\n", append=T, file="Grouped_by_Euc.txt")}
+
+## Brain regions included in each cluster (3-9) by Kmeans method
+## and frequency of samples showing p<0.05 diffrence between each cluster
+for(i in 3:9){
+  ans <- kmeans(t(cortical.thickness),i, nstart=10000)
+  oneway <- lapply(as.data.frame(t(cortical.thickness)),function(x)oneway.test(x~ans[[1]]))
+  nump <- sum(sapply(oneway, function(x)x$p.value<0.05))
+  cat("\n","Divided by ", i, "groups","\n\n",append=T,file="Grouped_by_Kmeans.txt")
+  for(numg in 1:i){
+    cat("Group",numg, "\n", append=T, file="Grouped_by_Kmeans.txt")
+    sink("Grouped_by_Kmeans.txt", append=T)
+    print(names(ans[[1]][ans[[1]]==numg]),quote=F)
+    sink()}
+  cat("\n","p<0.05: ", nump, "in", nrow(cortical.thickness), "\n\n", append=T, file="Grouped_by_Kmeans.txt")}

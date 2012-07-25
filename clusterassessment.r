@@ -87,13 +87,13 @@ manmat <- dist(t(cortical.thickness), method="manhattan")
 
 methods <- c("ward", "single", "complete", "average", "mcquitty", "median", "centroid")
 
-## plot dendrogram by each method using distance information based on the correlation coefficiency (pearson)
+## plot dendrogram by each method using distance information based on the correlation coefficient (pearson)
 pdf("clustering_by_pearson.pdf")
   par(ps=8)
   for(m in methods)plot(hclust(cormat,method=m),main=paste(m,"Pearson", sep=":"))
 dev.off()
 
-## plot dendrogram by each method using distance information based on the correlation coefficiency (spearman)
+## plot dendrogram by each method using distance information based on the correlation coefficient (spearman)
 pdf("clustering_by_spearman.pdf")
 par(ps=8)
 for(m in methods)plot(hclust(corspear,method=m),main=paste(m,"Spearman", sep=":"))
@@ -112,7 +112,7 @@ for(m in methods)plot(hclust(manmat, method=m),main=paste(m,"Manhattan", sep=":"
 dev.off()
 
 ## Brain regions included in each cluster (3-34) by Ward method
-## based on the information of the correlation coefficiency (pearson), and
+## based on the information of the correlation coefficient (pearson), and
 ## frequency of combination of regions showing r>0.5 and p<0.05 in each cluster.
 
 for(i in 3:34){
@@ -134,7 +134,7 @@ for(i in 3:34){
   cat("\n","Total: ",rpfull, "in", total, "\n",append = T, file = "Grouped_by_pearson.txt")}
 
 ## Brain regions included in each cluster (3-34) by Ward method
-## based on the information of the correlation coefficiency (spearman), and
+## based on the information of the correlation coefficient (spearman), and
 ## frequency of combination of regions showing r>0.5 and p<0.05 in each cluster.
 for(i in 3:34){
   Corspear.group <- cutree(hclust(corspear, method="ward"),i)

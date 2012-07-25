@@ -1,7 +1,7 @@
 rm(list=ls())
-setwd("~/Analysis/Gene_Cortex")
+setwd("~/Analysis/Cortex_thickness/")
 
-library("rrcov")
+source("~/Analysis/Cortex_thickness/Codes/cor.test.2.r")
 
 ##### READ DATA
 ## read table
@@ -76,8 +76,10 @@ cortical.thickness <- cortical.thickness[ind<0.05,cereb<0.05]
 cort3sd <- cort3sd[ind2<0.05,cereb2<0.05]
 
 tmp <- cortical.thickness[, c(rbind(1:34, 1:34+34))]
-##make distance matrix by correlation
+##make distance matrix by correlation (pearson)
 cormat <- as.dist(1-cor(tmp,use='pair'))
+##make distance matrix by correlation (spearman)
+corspear <- as.dist(1-cor(tmp,use='pair', method="spearman"))
 ##make distance matrix by Euclidean method
 eucmat <- dist(t(cortical.thickness))
 ##make distance matrix by Manhattan method
@@ -85,10 +87,16 @@ manmat <- dist(t(cortical.thickness), method="manhattan")
 
 methods <- c("ward", "single", "complete", "average", "mcquitty", "median", "centroid")
 
-## plot dendrogram by each method using distance information based on the correlation coefficient
-pdf("clustering_by_cor.pdf")
+## plot dendrogram by each method using distance information based on the correlation coefficiency (pearson)
+pdf("clustering_by_pearson.pdf")
   par(ps=8)
-  for(m in methods)plot(hclust(cormat,method=m),main=paste(m,"Cor", sep=":"))
+  for(m in methods)plot(hclust(cormat,method=m),main=paste(m,"Pearson", sep=":"))
+dev.off()
+
+## plot dendrogram by each method using distance information based on the correlation coefficiency (spearman)
+pdf("clustering_by_spearman.pdf")
+par(ps=8)
+for(m in methods)plot(hclust(corspear,method=m),main=paste(m,"Spearman", sep=":"))
 dev.off()
 
 ## plot dendrogram by each method using distance information by Euclidean method
@@ -103,20 +111,41 @@ par(ps=8)
 for(m in methods)plot(hclust(manmat, method=m),main=paste(m,"Manhattan", sep=":"))
 dev.off()
 
-## Brain regions included in each cluster (3-9) by Ward method
-## based on the information of the correlation coefficient, and
-## frequency of samples showing p<0.05 diffrence between each cluster
-for(i in 3:9){
+## Brain regions included in each cluster (3-34) by Ward method
+## based on the information of the correlation coefficiency (pearson), and
+## frequency of combination of regions showing r>0.5 and p<0.05 in each cluster.
+
+for(i in 3:34){
   Cor.group <- cutree(hclust(cormat, method="ward"),i)
-  oneway <- lapply(as.data.frame(t(cortical.thickness)),function(x)oneway.test(x~Cor.group))
-  nump <- sum(sapply(oneway, function(x)x$p.value<0.05))
-  cat("\n","Divided by ", i, "groups","\n\n",append=T,file="Grouped_by_cor.txt")
+  cat("\n","Divided by ", i, "groups","\n\n",append=T,file="Grouped_by_pearson.txt")
   for(numg in 1:i){
-  cat("Group",numg, "\n", append=T, file="Grouped_by_cor.txt")
-  sink("Grouped_by_cor.txt", append=T)
-  print(names(Cor.group[Cor.group==numg]),quote=F)
-  sink()}
-  cat("\n","p<0.05: ", nump, "in", nrow(cortical.thickness), "\n\n", append=T, file="Grouped_by_cor.txt")}
+    cat("Group",numg, "\n", append=T, file="Grouped_by_pearson.txt")
+    sink("Grouped_by_pearson.txt", append=T)
+    print(names(Cor.group[Cor.group==numg]),quote=F)
+    sink()
+    if(sum(Cor.group==numg)<2){next}
+    cts <- cor.test.2(cortical.thickness[names(which(Cor.group==numg))],"pearson")
+    rplist <- rbind(r=sapply(cts,  "[[" , "estimate"), p.value=sapply(cts,  "[[" , "p.value"))
+    cat("\n", "Combination with r > 0.5 and p <0.05: ", ncol(as.data.frame(rplist[,rplist[1,]>0.5&rplist[2,]<0.05])),
+        "in ", ncol(rplist), "\n\n", append = T, file="Grouped_by_pearson.txt")}}
+
+## Brain regions included in each cluster (3-34) by Ward method
+## based on the information of the correlation coefficiency (spearman), and
+## frequency of combination of regions showing r>0.5 and p<0.05 in each cluster.
+for(i in 3:34){
+  Corspear.group <- cutree(hclust(corspear, method="ward"),i)
+  cat("\n","Divided by ", i, "groups","\n\n",append=T,file="Grouped_by_spearman.txt")
+  for(numg in 1:i){
+    cat("Group",numg, "\n", append=T, file="Grouped_by_spearman.txt")
+    sink("Grouped_by_spearman.txt", append=T)
+    print(names(Corspear.group[Corspear.group==numg]),quote=F)
+    sink()
+    if(sum(Corspear.group==numg)<2){next}
+    cts <- cor.test.2(cortical.thickness[names(which(Corspear.group==numg))],"spearman")
+    rplist <- rbind(r=sapply(cts,  "[[" , "estimate"), p.value=sapply(cts,  "[[" , "p.value"))
+    cat("\n", "Combination with r > 0.5 and p <0.05: ", ncol(as.data.frame(rplist[,rplist[1,]>0.5&rplist[2,]<0.05])),
+        "in ", ncol(rplist), "\n\n", append = T, file="Grouped_by_spearman.txt")}}
+
 
 ## Brain regions included in each cluster (3-9) by Ward method
 ## based on the Euclidean distance, and
@@ -146,3 +175,15 @@ for(i in 3:9){
     print(names(ans[[1]][ans[[1]]==numg]),quote=F)
     sink()}
   cat("\n","p<0.05: ", nump, "in", nrow(cortical.thickness), "\n\n", append=T, file="Grouped_by_Kmeans.txt")}
+
+
+
+#cor.test.2(cortical.thickness[c("lh_caudalanteriorcingulate",
+#                                "lh_caudalmiddlefrontal",
+#                                "rh_bankssts",
+#                                "lh_parstriangularis")])
+#which(Euc.group==8)
+#names(which(Euc.group==8))
+#cts <- cor.test.2(cortical.thickness[names(which(Euc.group==8))])
+#sapply(cts,  "[[" , "estimate")
+#sapply(cts,  "[[" , "p.value")

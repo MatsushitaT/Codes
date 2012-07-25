@@ -118,6 +118,7 @@ dev.off()
 for(i in 3:34){
   Cor.group <- cutree(hclust(cormat, method="ward"),i)
   cat("\n","Divided by ", i, "groups","\n\n",append=T,file="Grouped_by_pearson.txt")
+  rpfull <- 0; total<-0
   for(numg in 1:i){
     cat("Group",numg, "\n", append=T, file="Grouped_by_pearson.txt")
     sink("Grouped_by_pearson.txt", append=T)
@@ -126,8 +127,11 @@ for(i in 3:34){
     if(sum(Cor.group==numg)<2){next}
     cts <- cor.test.2(cortical.thickness[names(which(Cor.group==numg))],"pearson")
     rplist <- rbind(r=sapply(cts,  "[[" , "estimate"), p.value=sapply(cts,  "[[" , "p.value"))
-    cat("\n", "Combination with r > 0.5 and p <0.05: ", ncol(as.data.frame(rplist[,rplist[1,]>0.5&rplist[2,]<0.05])),
-        "in ", ncol(rplist), "\n\n", append = T, file="Grouped_by_pearson.txt")}}
+    rpfull <- rpfull+ncol(as.data.frame(rplist[,rplist[1,]>0.5&rplist[2,]<0.05]))
+    total <- total+ncol(rplist)
+    cat("\n", "Combinations with r > 0.5 and p <0.05: ", ncol(as.data.frame(rplist[,rplist[1,]>0.5&rplist[2,]<0.05])),
+        "in ", ncol(rplist), "\n\n", append = T, file="Grouped_by_pearson.txt")}
+  cat("\n","Total: ",rpfull, "in", total, "\n",append = T, file = "Grouped_by_pearson.txt")}
 
 ## Brain regions included in each cluster (3-34) by Ward method
 ## based on the information of the correlation coefficiency (spearman), and
@@ -135,6 +139,7 @@ for(i in 3:34){
 for(i in 3:34){
   Corspear.group <- cutree(hclust(corspear, method="ward"),i)
   cat("\n","Divided by ", i, "groups","\n\n",append=T,file="Grouped_by_spearman.txt")
+  rpfull <- 0; total<-0
   for(numg in 1:i){
     cat("Group",numg, "\n", append=T, file="Grouped_by_spearman.txt")
     sink("Grouped_by_spearman.txt", append=T)
@@ -143,8 +148,12 @@ for(i in 3:34){
     if(sum(Corspear.group==numg)<2){next}
     cts <- cor.test.2(cortical.thickness[names(which(Corspear.group==numg))],"spearman")
     rplist <- rbind(r=sapply(cts,  "[[" , "estimate"), p.value=sapply(cts,  "[[" , "p.value"))
-    cat("\n", "Combination with r > 0.5 and p <0.05: ", ncol(as.data.frame(rplist[,rplist[1,]>0.5&rplist[2,]<0.05])),
-        "in ", ncol(rplist), "\n\n", append = T, file="Grouped_by_spearman.txt")}}
+    rpfull <- rpfull+ncol(as.data.frame(rplist[,rplist[1,]>0.5&rplist[2,]<0.05]))
+    total <- total+ncol(rplist)
+    rplist <- rbind(r=sapply(cts,  "[[" , "estimate"), p.value=sapply(cts,  "[[" , "p.value"))
+    cat("\n", "Combinations with r > 0.5 and p <0.05: ", ncol(as.data.frame(rplist[,rplist[1,]>0.5&rplist[2,]<0.05])),
+        "in ", ncol(rplist), "\n\n", append = T, file="Grouped_by_spearman.txt")}
+  cat("\n","Total: ",rpfull, "in", total, "\n",append = T, file = "Grouped_by_spearman.txt")}
 
 
 ## Brain regions included in each cluster (3-9) by Ward method

@@ -1,5 +1,5 @@
 rm(list=ls())
-setwd("~/Analysis/Gene_Cortex")
+setwd("~/Analysis/Cortex_thickness/")
 
 ##### READ DATA
 ## read table

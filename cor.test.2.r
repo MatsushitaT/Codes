@@ -10,6 +10,6 @@ cor.test.2 <- function(x,meth){
 }
 
 ## example
-#cts <- cor.test.2(list(cortex=1:10, insula=1:10 + rnorm(10),hippocampus=1:10),"spearman" )
+#cts <- cor.test.2(list(cortex=1:10, insula=1:10 + rnorm(10),hippocampus=1:10),"pearson" )
 #cts
 #sapply(cts,"[[","p.value")

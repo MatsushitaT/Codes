@@ -70,6 +70,7 @@ cortical.thickness <- cortical.thickness[ind<0.05,cereb<0.05]
 ##Principal component analysis
 Region.pca <- prcomp(cortical.thickness,scale=T)
 
+
 ##Caluculate component loadings
 loadings <- t(t(Region.pca$rotation)*Region.pca$sdev)
 
@@ -89,3 +90,37 @@ for(i in 1:3){
   abline(h=0,lty=2,lwd=2,col='red')
   dev.off()
    }
+
+#Correlation-based PCA
+Region.pca2 <- princomp(covmat=cor(cortical.thickness, use="pair"))
+Region.pca3 <- princomp(covmat=cor(cortical.thickness, use="pair", method="spearman"))
+#$loadings
+loadings2 <- t(t(Region.pca2$loadings)*Region.pca2$sd)
+loadings3 <- t(t(Region.pca3$loadings)*Region.pca3$sd)
+
+#plot
+pdf(file="PC2.pdf")
+screeplot(Region.pca2)
+dev.off()
+
+pdf(file="PC3.pdf")
+screeplot(Region.pca3)
+dev.off()
+
+
+for(i in 1:3){
+  pdf(file=paste("PCA_Correlaion_",i,".pdf",sep=""), width=10, height=10)
+  plot(loadings2[,combn(c(1:3),2)[,i]])
+  pointLabel(loadings2[,combn(c(1:3),2)[,i]],labels=rownames(loadings2),cex=.5)
+  abline(h=0,lty=2,lwd=2,col='red')
+  dev.off()
+}
+
+for(i in 1:3){
+  pdf(file=paste("PCA_Correlaion(spearman)_",i,".pdf",sep=""), width=10, height=10)
+  plot(loadings3[,combn(c(1:3),2)[,i]])
+  pointLabel(loadings3[,combn(c(1:3),2)[,i]],labels=rownames(loadings3),cex=.5)
+  abline(h=0,lty=2,lwd=2,col='red')
+  dev.off()
+}
+

@@ -75,7 +75,7 @@ Region.pca <- prcomp(cortical.thickness,scale=T)
 loadings <- t(t(Region.pca$rotation)*Region.pca$sdev)
 
 ##Plot
-pdf(file="PC.pdf")
+pdf(file="PC1.pdf")
 screeplot(Region.pca)
 dev.off()
 
@@ -100,11 +100,15 @@ loadings3 <- t(t(Region.pca3$loadings)*Region.pca3$sd)
 
 #plot
 pdf(file="PC2.pdf")
-screeplot(Region.pca2)
+screeplot(Region.pca2,npc=68)
+abline(h=1)
+abline(h=0.5)
 dev.off()
 
 pdf(file="PC3.pdf")
-screeplot(Region.pca3)
+screeplot(Region.pca3,npc=68)
+abline(h=1)
+abline(h=0.5)
 dev.off()
 
 

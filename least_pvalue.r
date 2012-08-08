@@ -1,7 +1,7 @@
 #set workdesk
 setwd("~/Analysis/Cortex_thickness/GWAS/")
 rm(list=ls())
-filename <- "plink.lh_bankssts.assoc.linear"
+
 #.assoc.linear file correspondent to each phenotype without -o option (plink.***.assoc.linear)
 files <- list.files("Linear_dominant/")
 for(filename in files){

@@ -72,21 +72,24 @@ cort3sd <- apply(cort3sd,2,function(x){
 cortical.thickness <- cortical.thickness[ind<0.05,cereb<0.05]
 cort3sd <- cort3sd[ind2<0.05,cereb2<0.05]
 
+save(cortical.thickness, file="cortical.thickness.rdata")
+
 ## make FID and IID
 cortical.thickness <- cbind(FID = rownames(cortical.thickness),IID = rownames(cortical.thickness),cortical.thickness)
 cortical.thickness <- cortical.thickness[cortical.thickness[,1]!="EPIC416"&cortical.thickness[,1]!="EPIC293",]
 cort3sd <- cbind(FID = rownames(cort3sd),IID = rownames(cort3sd),cort3sd)
 
 ## phenotype file for PLINK
-write.table(cortical.thickness, "phenotype.txt",col.names=T, row.names=F, quote=F)
+write.table(cortical.thickness, "GWAS/phenotype.txt",col.names=T, row.names=F, quote=F)
 write.table(cort3sd, "pheno3sd.txt",col.names=T, row.names=F, quote=F)
 
 ## Covariate File
-load("clinical.rdata")
-clinical.all[,"GSK"] <- paste("EPIC",clinical.all[,"GSK"], sep="")
-covariate <- merge(cortical.thickness,clinical.all[,c(2,58,67:68)],by.x="FID",by.y="GSK", all.x=T)
+clinical.data <- read.table("20120807_CoriticalThickness.csv", sep=";", header=T)
+clinical.data <- clinical.data[,c(2,79:81)]
+clinical.data[,"GSKID"] <- paste("EPIC",clinical.data[,"GSKID"], sep="")
+covariate <- merge(cortical.thickness,clinical.data,by.x="FID",by.y="GSKID", all.x=T)
 covariate <- covariate[,c(1,2,71:73)]
-write.table(covariate, "covariates.txt",col.names=T, row.names=F, quote=F)
+write.table(covariate, "GWAS/covariates.txt",col.names=T, row.names=F, quote=F)
 
 ## File for Extract individuals
-write.table(cortical.thickness[,1:2], "extract_individual.txt",col.names=F, row.names=F, quote=F)
+write.table(cortical.thickness[,1:2], "GWAS/extract_individual.txt",col.names=F, row.names=F, quote=F)
